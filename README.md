@@ -17,18 +17,27 @@ cd docker_browser/platforms/cto-ai
 TARGET_URL="https://your-site.com" bash install.sh
 ```
 
+## 一键卸载
+
+```bash
+bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/uninstall.sh)"
+```
+
 ## 功能
 
 - 安装 Firefox 152+（原生 tar.gz，绕过 Ubuntu 22.04 snap 虚包）
 - 配置 Xvfb 虚拟显示 + x11vnc + noVNC
-- 注册 supervisor 自动重启（3 个独立程序）
+- 支持 `VNC_PASSWORD` 环境变量设置密码
+- 注册 supervisor 自动重启（4 个独立程序）
+- 内置健康检查脚本（进程/VNC 端口/Cookie/页面可达性）
+- 可选 webhook 告警（支持 Telegram 等）
 - 通过 VNC 一次性手动通过 CF Turnstile 验证
 - Firefox 配置文件持久化，重启不丢失
 
 ## 托管服务管理
 
 ```bash
-supervisorctl status browser-xvfb browser-firefox browser-novnc
+supervisorctl status browser-xvfb browser-firefox browser-novnc browser-health
 ```
 
 ## Cloudflare Tunnel 配置
@@ -46,12 +55,25 @@ docker_browser/
 ├── platforms/
 │   └── cto-ai/              # CTO.ai/Docker 部署
 │       ├── install.sh        # 一键安装脚本
+│       ├── uninstall.sh      # 一键卸载脚本
 │       ├── start-browser.sh  # 浏览器启动器（环境变量驱动）
-│       ├── supervisor/       # Supervisor 配置（3 个程序）
+│       ├── health-check.sh   # 健康检查（4 项探活 + webhook 告警）
+│       ├── supervisor/       # Supervisor 配置（4 个程序）
 │       ├── cf-bypass.md      # CF Turnstile 绕过分析
 │       └── README.md         # 详细部署文档
 └── ANALYSIS.md               # vevc/one-node 保活机制分析
 ```
+
+## 环境变量
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `TARGET_URL` | `https://github.com/zv201413/docker_browser` | 浏览器打开的网址 |
+| `VNC_PASSWORD` | （自动生成） | noVNC 连接密码 |
+| `VNC_PORT` | `3000` | noVNC Web 端口 |
+| `ALERT_WEBHOOK` | （无） | 健康检查告警 webhook |
+| `DISPLAY_NUM` | `99` | Xvfb 虚拟显示编号 |
+
 ## 为什么用 Firefox？
 
 Chrome 在 Docker 中必须加 `--no-sandbox` 参数，Cloudflare Turnstile **能检测到这个标记**，即使真人点击验证也会被拒绝。
