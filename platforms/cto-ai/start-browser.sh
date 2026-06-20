@@ -59,6 +59,14 @@ ensure_novnc() {
 }
 
 # --- Main ---
+
+# Security gate: never expose an unauthenticated VNC over the public CF tunnel.
+if [ -z "${VNC_PASSWORD:-}" ]; then
+  log "ERROR: VNC_PASSWORD not set — refusing to start (would expose an open VNC publicly)."
+  log "       Set a password and restart, e.g.:  VNC_PASSWORD='your-strong-pass' bash install.sh"
+  exit 1
+fi
+
 cleanup
 ensure_xvfb
 
@@ -71,16 +79,12 @@ sleep 3
 
 log "Starting x11vnc (display :${DISPLAY_NUM})"
 
-VNC_PASSWORD="${VNC_PASSWORD:-}"
-if [ -n "$VNC_PASSWORD" ]; then
-  echo "$VNC_PASSWORD" > /tmp/vnc.passwd
-  chmod 600 /tmp/vnc.passwd
-  x11vnc -display ":${DISPLAY_NUM}" -forever -passwdfile /tmp/vnc.passwd -quiet &>/tmp/x11vnc.log &
-  sleep 1
-  rm -f /tmp/vnc.passwd
-else
-  x11vnc -display ":${DISPLAY_NUM}" -forever -nopw -quiet &>/tmp/x11vnc.log &
-fi
+echo "$VNC_PASSWORD" > /tmp/vnc.passwd
+chmod 600 /tmp/vnc.passwd
+x11vnc -display ":${DISPLAY_NUM}" -forever -passwdfile /tmp/vnc.passwd -quiet &>/tmp/x11vnc.log &
+X11VNC_PID=$!
+sleep 1
+rm -f /tmp/vnc.passwd
 
 X11VNC_PID=$!
 

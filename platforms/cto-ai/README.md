@@ -20,8 +20,8 @@
 ## 快速安装
 
 ```bash
-# 一行命令，替换你的目标网址
-TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
+# 一行命令，替换你的目标网址和密码
+TARGET_URL="https://your-site.com" VNC_PASSWORD="your-strong-pass" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
 ```
 
 ### 前置条件
@@ -47,6 +47,7 @@ TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubuserco
 | `TARGET_URL` | `https://github.com/zv201413/docker_browser` | Firefox 打开的目标网址 |
 | `VNC_PORT` | `3000` | noVNC 监听端口 |
 | `DISPLAY_NUM` | `99` | Xvfb 显示编号 |
+| `VNC_PASSWORD` | *(必填)* | noVNC 访问密码，未设则拒绝启动 |
 
 ## Supervisor 程序（自动重启）
 

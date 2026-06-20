@@ -23,6 +23,13 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+VNC_PASSWORD="${VNC_PASSWORD:-}"
+if [ -z "$VNC_PASSWORD" ]; then
+  err "VNC_PASSWORD is required — noVNC is exposed via the public Cloudflare tunnel."
+  err "Re-run: VNC_PASSWORD='your-strong-pass' TARGET_URL='https://site' bash install.sh"
+  exit 1
+fi
+
 # ----- Detect supervisor -----
 detect_supervisor() {
   for sock in /tmp/supervisor.sock /var/run/supervisor.sock; do
@@ -96,7 +103,7 @@ log "[1/5] Installing system dependencies..."
 apt-get update -qq
 apt-get install -y -qq xvfb x11vnc wget curl libdbus-glib-1-2 libxt6 libxmu6 \
     libgtk-3-0 libasound2 libx11-xcb1 libpci3 libegl1 libgl1-mesa-glx \
-    libxcomposite1 libxrandr2 libxdamage1 libxcursor1 libxinerama1 libxi6 libatk1.0-0 2>/dev/null
+    libxcomposite1 libxrandr2 libxdamage1 libxcursor1 libxinerama1 libxi6 libatk1.0-0 || true
 
 # noVNC: prefer apt, fallback to git
 if apt-get install -y -qq novnc 2>/dev/null; then
@@ -168,7 +175,7 @@ if [ -n "$CONFD" ]; then
   cat > "${CONFD}/browser-launcher.conf" <<EOF
 [program:browser-launcher]
 command=/opt/start-browser.sh
-environment=TARGET_URL="${TARGET_URL}",VNC_PORT="${VNC_PORT}",DISPLAY_NUM="${DISPLAY_NUM:-99}"
+environment=TARGET_URL="${TARGET_URL}",VNC_PORT="${VNC_PORT}",DISPLAY_NUM="${DISPLAY_NUM:-99}",VNC_PASSWORD="${VNC_PASSWORD}"
 autostart=true
 autorestart=true
 startsecs=5

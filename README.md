@@ -6,7 +6,7 @@
 ## 一键安装 (CTO.ai / Docker)
 
 ```bash
-TARGET_URL="https://github.com/zv201413/docker_browser" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
+TARGET_URL="https://github.com/zv201413/docker_browser" VNC_PASSWORD="your-strong-pass" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
 ```
 
 或手动安装：
@@ -14,7 +14,7 @@ TARGET_URL="https://github.com/zv201413/docker_browser" bash -c "$(curl -sSL htt
 ```bash
 git clone https://github.com/zv201413/docker_browser.git
 cd docker_browser/platforms/cto-ai
-TARGET_URL="https://your-site.com" bash install.sh
+TARGET_URL="https://your-site.com" VNC_PASSWORD="your-strong-pass" bash install.sh
 ```
 
 ## 一键卸载
@@ -69,7 +69,7 @@ docker_browser/
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `TARGET_URL` | `https://github.com/zv201413/docker_browser` | 浏览器打开的网址 |
-| `VNC_PASSWORD` | （自动生成） | noVNC 连接密码 |
+| `VNC_PASSWORD` | *(必填)* | noVNC 访问密码，未设则拒绝启动 |
 | `VNC_PORT` | `3000` | noVNC Web 端口 |
 | `ALERT_WEBHOOK` | （无） | 健康检查告警 webhook |
 | `DISPLAY_NUM` | `99` | Xvfb 虚拟显示编号 |
