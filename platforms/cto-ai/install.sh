@@ -105,28 +105,31 @@ apt-get install -y -qq xvfb x11vnc wget curl libdbus-glib-1-2 libxt6 libxmu6 \
     libgtk-3-0 libasound2 libx11-xcb1 libpci3 libegl1 libgl1-mesa-glx \
     libxcomposite1 libxrandr2 libxdamage1 libxcursor1 libxinerama1 libxi6 libatk1.0-0 || true
 
-# noVNC: prefer apt, fallback to git
-if apt-get install -y -qq novnc 2>/dev/null; then
-  log "  noVNC installed via apt"
-elif [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
-  log "  Installing noVNC from GitHub..."
-  apt-get install -y -qq git 2>/dev/null || true
-  git clone --depth=1 https://github.com/novnc/noVNC /opt/noVNC 2>/dev/null || {
-    warn "git clone failed, trying pip alternative..."
-    pip3 install websockify 2>/dev/null || true
-  }
+# ----- noVNC + websockify -----
+# apt 源常缺 universe（novnc/python3-websockify 装不上），改用 git clone。
+# websockify 放独立目录 /opt/websockify，不放进 noVNC 的 submodule 路径
+# （那里重装会被重置、丢失 websockify 包，导致 ModuleNotFoundError）。
+apt-get install -y -qq git 2>/dev/null || true
+
+if [ ! -f /opt/noVNC/vnc.html ]; then
+  log "  Cloning noVNC ..."
+  rm -rf /opt/noVNC
+  git clone --depth=1 https://github.com/novnc/noVNC /opt/noVNC 2>&1 | tail -1 || true
+fi
+if [ ! -f /opt/websockify/websockify/__init__.py ]; then
+  log "  Cloning websockify ..."
+  rm -rf /opt/websockify
+  git clone --depth=1 https://github.com/novnc/websockify /opt/websockify 2>&1 | tail -1 || true
 fi
 
-# Ensure novnc_proxy is in PATH
-if ! command -v novnc_proxy &>/dev/null; then
-  NOVNC_PROXY=$(find /usr /opt -name novnc_proxy -type f 2>/dev/null | head -1)
-  if [ -n "$NOVNC_PROXY" ]; then
-    ln -sf "$NOVNC_PROXY" /usr/local/bin/novnc_proxy
-    log "  symlinked novnc_proxy from $NOVNC_PROXY"
-  else
-    warn "  novnc_proxy not found after install"
-  fi
+# 实物校验：装不上就报错退出，不再假装装好了
+if [ ! -f /opt/noVNC/vnc.html ] || [ ! -f /opt/websockify/websockify/__init__.py ]; then
+  err "noVNC/websockify install failed (can the container reach github.com?)"
+  err "  /opt/noVNC/vnc.html                    : $([ -f /opt/noVNC/vnc.html ] && echo OK || echo MISSING)"
+  err "  /opt/websockify/websockify/__init__.py : $([ -f /opt/websockify/websockify/__init__.py ] && echo OK || echo MISSING)"
+  exit 1
 fi
+log "  noVNC + websockify ready"
 
 # ----- Step 2: Firefox (native tar, not snap) -----
 log "[2/5] Installing Firefox..."

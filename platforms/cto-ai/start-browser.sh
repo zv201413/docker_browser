@@ -42,20 +42,25 @@ ensure_xvfb() {
   exit 1
 }
 
-ensure_novnc() {
-  NOVNC_DIR=""
+# noVNC 启动：websockify 做 WebSocket<->TCP(5900) 转发。
+# websockify 包在独立 /opt/websockify，必须 PYTHONPATH 指过去才能 import。
+start_novnc() {
+  local web="" d ws
   for d in /opt/noVNC /usr/share/novnc /usr/share/noVNC; do
-    if [ -f "$d/utils/novnc_proxy" ]; then
-      NOVNC_DIR="$d"
-      break
-    fi
+    [ -f "$d/vnc.html" ] && { web="$d"; break; }
   done
-
-  if [ -z "$NOVNC_DIR" ]; then
-    log "ERROR: noVNC not found. Run install.sh first."
+  if [ -z "$web" ]; then
+    log "ERROR: noVNC static files not found (no vnc.html). Run install.sh first."
     exit 1
   fi
-  echo "$NOVNC_DIR"
+  for ws in /opt/websockify "$web/utils/websockify"; do
+    if [ -f "$ws/websockify/__init__.py" ] && [ -f "$ws/run" ]; then
+      log "noVNC via websockify ($ws, web=$web)"
+      exec env PYTHONPATH="$ws" python3 "$ws/run" --web "$web" "${VNC_PORT}" localhost:5900
+    fi
+  done
+  log "ERROR: websockify not usable (need <dir>/websockify/__init__.py + run). Re-run install.sh."
+  exit 1
 }
 
 # --- Main ---
@@ -87,7 +92,4 @@ sleep 1
 rm -f /tmp/vnc.passwd
 
 log "Starting noVNC proxy (port ${VNC_PORT})"
-NOVNC_DIR="$(ensure_novnc)"
-exec "${NOVNC_DIR}/utils/novnc_proxy" \
-  --vnc localhost:5900 \
-  --listen "${VNC_PORT}"
+start_novnc
