@@ -11,7 +11,7 @@ Firefox 的沙箱在容器中会自动降级，不会产生任何可被检测的
 ## 一键安装 (CTO.ai / Docker)
 
 ```bash
-TARGET_URL="https://client.freemchosting.com/dashboard" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
+TARGET_URL="https://github.com/zv201413/docker_browser" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
 ```
 
 或手动安装：
