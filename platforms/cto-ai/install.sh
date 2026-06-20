@@ -156,6 +156,7 @@ log "  Firefox ${FIREFOX_VER}"
 # ----- Step 3: Deploy start-browser.sh -----
 log "[3/5] Deploying start-browser.sh..."
 curl -sSL -o /opt/start-browser.sh "${GH_URL}/start-browser.sh"
+sed -i 's/\r$//' /opt/start-browser.sh
 chmod +x /opt/start-browser.sh
 log "  Installed to /opt/start-browser.sh"
 log "  Default URL: ${TARGET_URL} (override via TARGET_URL env var)"
