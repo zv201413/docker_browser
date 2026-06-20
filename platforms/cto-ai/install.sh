@@ -100,13 +100,12 @@ elif [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
   }
 fi
 
-# Ensure /opt/noVNC/utils/novnc_proxy exists (for supervisor config)
-if [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
-  mkdir -p /opt/noVNC/utils 2>/dev/null
-  if [ -f /usr/bin/novnc_proxy ]; then
-    ln -sf /usr/bin/novnc_proxy /opt/noVNC/utils/novnc_proxy
-  elif [ -f /usr/share/novnc/utils/novnc_proxy ]; then
-    ln -sf /usr/share/novnc/utils/novnc_proxy /opt/noVNC/utils/novnc_proxy
+# Ensure novnc_proxy is in PATH; fallback symlink for old supervisor configs
+if ! command -v novnc_proxy &>/dev/null; then
+  if [ -f /usr/share/novnc/utils/novnc_proxy ]; then
+    ln -sf /usr/share/novnc/utils/novnc_proxy /usr/local/bin/novnc_proxy
+  elif [ -f /opt/noVNC/utils/novnc_proxy ]; then
+    ln -sf /opt/noVNC/utils/novnc_proxy /usr/local/bin/novnc_proxy
   fi
 fi
 
@@ -114,11 +113,11 @@ fi
 log "[2/5] Installing Firefox..."
 apt-get remove -y firefox chromium-browser 2>/dev/null || true
 
-if command -v firefox &>/dev/null && [ -f /opt/firefox/firefox ]; then
+if command -v firefox &>/dev/null && [ -f /opt/firefox/firefox ] && firefox --version &>/dev/null; then
   log "  Firefox already installed at /opt/firefox"
 else
   log "  Downloading Firefox from Mozilla..."
-  rm -rf /opt/firefox /tmp/firefox.tar.*
+  rm -rf /opt/firefox /usr/local/bin/firefox /tmp/firefox.tar.*
   wget -q --show-progress \
     -O /tmp/firefox.tar.bz2 \
     "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=zh-CN"
