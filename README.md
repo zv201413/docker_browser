@@ -58,6 +58,10 @@ docker_browser/
 └── ANALYSIS.md               # vevc/one-node keepalive analysis
 ```
 
+## Acknowledgments
+
+This project builds on analysis and inspiration from [vevc/one-node](https://github.com/vevc/one-node) — the original keepalive mechanism that sparked the investigation into browser-in-container behavior and Cloudflare Turnstile bypass.
+
 ## License
 
 MIT
