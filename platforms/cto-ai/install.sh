@@ -208,7 +208,7 @@ fi
 log "[5/5] Starting browser service..."
 if [ -n "$CONFD" ]; then
   # Kill any leftover processes from manual runs
-  killall Xvfb x11vnc firefox 2>/dev/null || true
+  for p in Xvfb x11vnc firefox novnc_proxy; do pkill -f "$p" 2>/dev/null || true; done
   rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
   $SUP_CMD start browser-launcher 2>/dev/null || true

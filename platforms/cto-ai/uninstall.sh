@@ -72,9 +72,9 @@ fi
 
 # ----- Kill leftover processes -----
 log "[3/4] Killing leftover processes..."
-killall Xvfb 2>/dev/null && log "  killed Xvfb" || true
-killall x11vnc 2>/dev/null && log "  killed x11vnc" || true
-killall firefox 2>/dev/null && log "  killed firefox" || true
+for p in Xvfb x11vnc firefox novnc_proxy; do
+  pkill -f "$p" 2>/dev/null && log "  killed $p" || true
+done
 rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
 # ----- Remove installed files -----
