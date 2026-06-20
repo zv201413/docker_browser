@@ -68,7 +68,18 @@ log "Firefox PID: ${FIREFOX_PID}"
 sleep 3
 
 log "Starting x11vnc (display :${DISPLAY_NUM})"
-x11vnc -display ":${DISPLAY_NUM}" -forever -nopw -quiet &>/tmp/x11vnc.log &
+
+VNC_PASSWORD="${VNC_PASSWORD:-}"
+if [ -n "$VNC_PASSWORD" ]; then
+  echo "$VNC_PASSWORD" > /tmp/vnc.passwd
+  chmod 600 /tmp/vnc.passwd
+  x11vnc -display ":${DISPLAY_NUM}" -forever -passwdfile /tmp/vnc.passwd -quiet &>/tmp/x11vnc.log &
+  sleep 1
+  rm -f /tmp/vnc.passwd
+else
+  x11vnc -display ":${DISPLAY_NUM}" -forever -usepw -quiet &>/tmp/x11vnc.log &
+fi
+
 X11VNC_PID=$!
 
 log "Starting noVNC proxy (port ${VNC_PORT})"
