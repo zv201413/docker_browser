@@ -1,0 +1,11 @@
+# vevc/one-node 原始文件 — 本地分析用，不上 GitHub
+source-google-idx/
+
+# vevc 的 Google IDX 方案 — 与本项目无关
+platforms/google-idx/
+
+# vevc 的保活脚本 — 参考文件
+/app.js
+/dev.nix
+/install.sh
+/startup.sh
