@@ -44,7 +44,7 @@ TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubuserco
 
 | 变量 | 默认值 | 说明 |
 |----------|---------|-------------|
-| `TARGET_URL` | `https://client.freemchosting.com/dashboard` | Firefox 打开的目标网址 |
+| `TARGET_URL` | `https://github.com/zv201413/docker_browser` | Firefox 打开的目标网址 |
 | `VNC_PORT` | `3000` | noVNC 监听端口 |
 | `DISPLAY_NUM` | `99` | Xvfb 显示编号 |
 

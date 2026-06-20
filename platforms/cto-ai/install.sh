@@ -7,7 +7,7 @@
 # ============================================================
 set -euo pipefail
 
-TARGET_URL="${TARGET_URL:-https://client.freemchosting.com/dashboard}"
+TARGET_URL="${TARGET_URL:-https://github.com/zv201413/docker_browser}"
 VNC_PORT="${VNC_PORT:-3000}"
 INSTALL_DIR="${INSTALL_DIR:-/opt}"
 
