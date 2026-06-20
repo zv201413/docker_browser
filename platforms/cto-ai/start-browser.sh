@@ -56,7 +56,7 @@ start_novnc() {
   for ws in /opt/websockify "$web/utils/websockify"; do
     if [ -f "$ws/websockify/__init__.py" ] && [ -f "$ws/run" ]; then
       log "noVNC via websockify ($ws, web=$web)"
-      exec env PYTHONPATH="$ws" python3 "$ws/run" --web "$web" "${VNC_PORT}" localhost:5900
+      exec env PYTHONPATH="$ws" python3 -m websockify --web "$web" "${VNC_PORT}" localhost:5900
     fi
   done
   log "ERROR: websockify not usable (need <dir>/websockify/__init__.py + run). Re-run install.sh."
