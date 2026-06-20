@@ -1,73 +1,73 @@
-# Cloudflare Turnstile Bypass: Why Firefox works and Chrome doesn't
+# Cloudflare Turnstile 绕过分析：为什么 Firefox 可以而 Chrome 不行
 
-> Real-world finding: CTO.ai Docker container (Ubuntu 22.04), Firefox 152.0.1, June 2026.
+> 实测环境：CTO.ai Docker 容器（Ubuntu 22.04），Firefox 152.0.1，2026 年 6 月。
 
-## The Problem
+## 问题
 
-Running a browser in Docker to access Cloudflare-protected websites:
+在 Docker 中运行浏览器访问 Cloudflare 保护的网站时：
 
 ```
 Chrome + Xvfb + noVNC
-  → CF Turnstile challenge loads visually
-  → User manually clicks "I am human"
-  → CF rejects the token → page stuck forever
+  → CF Turnstile 验证界面正常加载
+  → 用户手动点击"我不是机器人"
+  → CF 拒绝验证 → 页面卡死
 ```
 
-Chrome **must** run with `--no-sandbox` in Docker (no user namespaces). Cloudflare Turnstile detects this and silently rejects the challenge response, even from a real human click.
+Chrome 在 Docker **必须**带 `--no-sandbox` 运行（无用户命名空间）。Cloudflare Turnstile 能检测到这个参数，即使真人点击验证也会被静默拒绝。
 
-## Root Cause
+## 根本原因
 
-| Factor | Chrome | Firefox |
+| 因素 | Chrome | Firefox |
 |--------|--------|---------|
-| Sandbox in Docker | `--no-sandbox` required | Graceful degradation |
-| Detectable flag | ✅ Yes — `--no-sandbox` is visible | ❌ No equivalent |
-| Turnstile behavior | Renders challenge, click rejected | Challenge accepted normally |
-| GPU/WebGL | Missing in Xvfb | Same (both use software render) |
+| Docker 中的沙箱 | 必须 `--no-sandbox` | 自动降级 |
+| 可检测标记 | ✅ 有 — `--no-sandbox` 可见 | ❌ 无 |
+| Turnstile 行为 | 验证界面正常显示，点击被拒绝 | 验证正常通过 |
+| GPU/WebGL | Xvfb 中缺失 | 相同（均使用软件渲染） |
 
-The sandbox status is the **only meaningful difference**. Both browsers lack GPU, both run in Xvfb, both have dbus warnings. But Chrome's `--no-sandbox` is a hard signal that Turnstile acts on.
+沙箱状态是**唯一有意义的差异**。两个浏览器都缺 GPU、都跑在 Xvfb 里、都有 dbus 警告。但 Chrome 的 `--no-sandbox` 是一个硬信号，Turnstile 会据此封杀。
 
-## Test Results (CTO.ai container, Ubuntu 22.04)
+## 测试结果（CTO.ai 容器，Ubuntu 22.04）
 
-| Browser | Config | Challenge | Manual Click | Result |
+| 浏览器 | 配置 | 验证界面 | 手动点击 | 结果 |
 |---------|--------|-----------|-------------|--------|
-| Chrome 149 | `--no-sandbox --disable-gpu` | ✅ Renders | ❌ Rejected | ❌ |
-| Firefox 152 | No special flags | ✅ Renders | ✅ Accepted | ✅ |
+| Chrome 149 | `--no-sandbox --disable-gpu` | ✅ 正常加载 | ❌ 被拒 | ❌ |
+| Firefox 152 | 无特殊参数 | ✅ 正常加载 | ✅ 通过 | ✅ |
 
-## Why Firefox doesn't need `--no-sandbox`
+## 为什么 Firefox 不需要 `--no-sandbox`
 
-Firefox in Docker logs `CanCreateUserNamespace() clone() failure: EPERM` but continues with reduced isolation using:
+Firefox 在 Docker 中会打印 `CanCreateUserNamespace() clone() failure: EPERM`，但会以降级模式继续运行：
 
-- Content process sandboxing (works without CLONE_NEWUSER)
-- `LD_PRELOAD`-based sandbox as fallback
-- No user-facing `--no-sandbox` flag that JavaScript can detect
+- 内容进程沙箱（无需 CLONE_NEWUSER）
+- 基于 `LD_PRELOAD` 的沙箱回退
+- 没有 JavaScript 可检测的用户态 `--no-sandbox` 标记
 
-Turnstile checks for `--no-sandbox` via `navigator.webdriver`, process argument inspection, and sandbox API probing. Firefox's fallback path doesn't trigger these detectors.
+Turnstile 通过 `navigator.webdriver`、进程参数检查和沙箱 API 探测来识别 `--no-sandbox`。Firefox 的回退路径不会触发这些检测器。
 
-## First-Time Setup
+## 首次配置
 
-1. Open `https://vnc.your-domain.com/vnc.html` in your local browser
-2. Click **Connect** → Firefox desktop appears
-3. Navigate to the CF-protected site
-4. **Manually solve the Turnstile/CAPTCHA** (one time)
-5. Log in — cookies are saved to `~/.mozilla/firefox/`
+1. 在你的本地浏览器打开 `https://vnc.your-domain.com/vnc.html`
+2. 点击 **Connect** → 看到 Firefox 桌面
+3. 导航到 CF 保护的网站
+4. **手动解决 Turnstile/CAPTCHA 验证**（只需一次）
+5. 登录 — cookies 保存在 `~/.mozilla/firefox/` 中
 
-## Limitations
+## 局限性
 
-- **Not automated bypass**: Requires human interaction for first login and after cookie expiry
-- **IP reputation**: If CF hard-blocks your IP (not just challenges), no browser helps. Check with `curl -sI https://target.site | grep cf-mitigated`:
-  - `cf-mitigated: challenge` → Firefox works
-  - `cf-mitigated: blocked` or no header → IP-level block
-- **Cookie expiry**: Session cookies eventually expire. Re-open VNC and re-login.
+- **不是自动化绕过**：首次登录和 cookie 过期后需要人工介入
+- **IP 信誉**：如果 CF 硬拦截你的 IP（不只是验证），任何浏览器都没用。用 `curl -sI https://目标网站 | grep cf-mitigated` 检查：
+  - `cf-mitigated: challenge` → Firefox 可用
+  - `cf-mitigated: blocked` 或无此头 → IP 级封锁
+- **Cookie 过期**：会话 cookie 最终会过期，需要重新打开 VNC 重新登录
 
-## Verification
+## 验证
 
 ```bash
-# Check if the browser has --no-sandbox (should be 0 for Firefox)
+# 检查浏览器是否带 --no-sandbox（Firefox 应为 0）
 ps aux | grep -c no-sandbox
 
-# Check CF response type
+# 检查 CF 响应类型
 curl -sI https://your-target-site.com | grep cf-mitigated
 
-# Verify Firefox is running with proper display
+# 确认 Firefox 在正确的显示器上运行
 ps aux | grep firefox | head -3
 ```
