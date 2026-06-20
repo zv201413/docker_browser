@@ -86,8 +86,6 @@ X11VNC_PID=$!
 sleep 1
 rm -f /tmp/vnc.passwd
 
-X11VNC_PID=$!
-
 log "Starting noVNC proxy (port ${VNC_PORT})"
 NOVNC_DIR="$(ensure_novnc)"
 exec "${NOVNC_DIR}/utils/novnc_proxy" \
