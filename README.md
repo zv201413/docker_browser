@@ -11,13 +11,13 @@ Firefox's sandbox degrades gracefully in containers without producing detectable
 ## One-Click Install (CTO.ai / Docker)
 
 ```bash
-TARGET_URL="https://client.freemchosting.com/dashboard" bash -c "$(curl -sSL https://raw.githubusercontent.com/YOUR_USER/docker_browser/main/platforms/cto-ai/install.sh)"
+TARGET_URL="https://client.freemchosting.com/dashboard" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
 ```
 
 Or manually:
 
 ```bash
-git clone https://github.com/YOUR_USER/docker_browser.git
+git clone https://github.com/zv201413/docker_browser.git
 cd docker_browser/platforms/cto-ai
 TARGET_URL="https://your-site.com" bash install.sh
 ```

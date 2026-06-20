@@ -21,7 +21,7 @@ Run Firefox with Xvfb + noVNC inside a CTO.ai Docker container, accessible via C
 
 ```bash
 # One line, with your target URL
-TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubusercontent.com/YOUR_USER/docker_browser/main/platforms/cto-ai/install.sh)"
+TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai/install.sh)"
 ```
 
 ### Prerequisites
