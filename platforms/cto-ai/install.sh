@@ -100,10 +100,14 @@ elif [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
   }
 fi
 
-# Link noVNC to a known location if needed
-if [ -d /usr/share/novnc ] && [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
+# Ensure /opt/noVNC/utils/novnc_proxy exists (for supervisor config)
+if [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
   mkdir -p /opt/noVNC/utils 2>/dev/null
-  ln -sf /usr/share/novnc/utils/novnc_proxy /opt/noVNC/utils/novnc_proxy 2>/dev/null || true
+  if [ -f /usr/bin/novnc_proxy ]; then
+    ln -sf /usr/bin/novnc_proxy /opt/noVNC/utils/novnc_proxy
+  elif [ -f /usr/share/novnc/utils/novnc_proxy ]; then
+    ln -sf /usr/share/novnc/utils/novnc_proxy /opt/noVNC/utils/novnc_proxy
+  fi
 fi
 
 # ----- Step 2: Firefox (native tar, not snap) -----
