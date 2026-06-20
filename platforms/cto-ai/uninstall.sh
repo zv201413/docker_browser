@@ -36,9 +36,19 @@ detect_confd() {
   return 1
 }
 
+detect_supervisor_cfg() {
+  for conf in /home/zv/boot/supervisord.conf /etc/supervisor/supervisord.conf /etc/supervisord.conf; do
+    [ -f "$conf" ] && { echo "$conf"; return 0; }
+  done
+  return 1
+}
+
 SUPERVISOR_SOCK=$(detect_supervisor || true)
+SUPERVISOR_CFG=$(detect_supervisor_cfg || true)
 SUP_CMD="supervisorctl"
-if [ -n "$SUPERVISOR_SOCK" ] && [ "$SUPERVISOR_SOCK" != "auto" ]; then
+if [ -n "$SUPERVISOR_CFG" ]; then
+  SUP_CMD="supervisorctl -c $SUPERVISOR_CFG"
+elif [ -n "$SUPERVISOR_SOCK" ] && [ "$SUPERVISOR_SOCK" != "auto" ]; then
   SUP_CMD="supervisorctl -s unix://${SUPERVISOR_SOCK}"
 fi
 

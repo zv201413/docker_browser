@@ -72,7 +72,15 @@ detect_supervisor_confd() {
   return 1
 }
 
+detect_supervisor_cfg() {
+  for conf in /home/zv/boot/supervisord.conf /etc/supervisor/supervisord.conf /etc/supervisord.conf; do
+    [ -f "$conf" ] && { echo "$conf"; return 0; }
+  done
+  return 1
+}
+
 SUPERVISOR_SOCK=$(detect_supervisor || true)
+SUPERVISOR_CFG=$(detect_supervisor_cfg || true)
 
 # ============================================================
 echo ""
@@ -100,12 +108,14 @@ elif [ ! -f /opt/noVNC/utils/novnc_proxy ]; then
   }
 fi
 
-# Ensure novnc_proxy is in PATH; fallback symlink for old supervisor configs
+# Ensure novnc_proxy is in PATH
 if ! command -v novnc_proxy &>/dev/null; then
-  if [ -f /usr/share/novnc/utils/novnc_proxy ]; then
-    ln -sf /usr/share/novnc/utils/novnc_proxy /usr/local/bin/novnc_proxy
-  elif [ -f /opt/noVNC/utils/novnc_proxy ]; then
-    ln -sf /opt/noVNC/utils/novnc_proxy /usr/local/bin/novnc_proxy
+  NOVNC_PROXY=$(find /usr /opt -name novnc_proxy -type f 2>/dev/null | head -1)
+  if [ -n "$NOVNC_PROXY" ]; then
+    ln -sf "$NOVNC_PROXY" /usr/local/bin/novnc_proxy
+    log "  symlinked novnc_proxy from $NOVNC_PROXY"
+  else
+    warn "  novnc_proxy not found after install"
   fi
 fi
 
@@ -149,7 +159,9 @@ if [ -n "$CONFD" ]; then
   curl -sSL -o "${CONFD}/browser-novnc.conf"  "${GH_URL}/supervisor/browser-novnc.conf"
 
   SUP_CMD="supervisorctl"
-  if [ -n "$SUPERVISOR_SOCK" ] && [ "$SUPERVISOR_SOCK" != "auto" ]; then
+  if [ -n "$SUPERVISOR_CFG" ]; then
+    SUP_CMD="supervisorctl -c $SUPERVISOR_CFG"
+  elif [ -n "$SUPERVISOR_SOCK" ] && [ "$SUPERVISOR_SOCK" != "auto" ]; then
     SUP_CMD="supervisorctl -s unix://${SUPERVISOR_SOCK}"
   fi
 
