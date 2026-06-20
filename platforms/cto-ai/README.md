@@ -38,7 +38,7 @@ TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubuserco
 | Xvfb | apt | |
 | x11vnc | apt | |
 | noVNC | apt 或 GitHub | |
-| Supervisor 配置 | 3 个程序 | |
+| Supervisor 配置 | 统一总控程序 | |
 
 ## 环境变量
 
@@ -50,16 +50,11 @@ TARGET_URL="https://your-site.com" bash -c "$(curl -sSL https://raw.githubuserco
 
 ## Supervisor 程序（自动重启）
 
-```bash
 # 查看状态
-supervisorctl status browser-xvfb browser-firefox browser-novnc
+supervisorctl status browser-launcher
 
-# 只重启 Firefox（VNC 画面不中断）
-supervisorctl restart browser-firefox
-
-# 全部重启
-supervisorctl restart browser-xvfb browser-firefox browser-novnc
-```
+# 重启服务
+supervisorctl restart browser-launcher
 
 ## Cloudflare Tunnel 设置
 
@@ -84,9 +79,9 @@ supervisorctl restart browser-xvfb browser-firefox browser-novnc
 
 | 现象 | 原因 | 解决方法 |
 |---------|-------|-----|
-| VNC 显示黑屏 | Xvfb 锁文件残留 | `rm -f /tmp/.X99-lock` + `supervisorctl restart browser-xvfb` |
-| Tunnel 返回 502 | noVNC 未运行 | `supervisorctl restart browser-novnc` |
-| Firefox 未加载 | 显示尚未就绪 | `supervisorctl restart browser-firefox`（启动脚本有重试机制）|
+| VNC 显示黑屏 | Xvfb 锁文件残留 | `rm -f /tmp/.X99-lock` + `supervisorctl restart browser-launcher` |
+| Tunnel 返回 502 | noVNC 未运行 | `supervisorctl restart browser-launcher` |
+| Firefox 未加载 | 显示尚未就绪 | `supervisorctl restart browser-launcher`（启动脚本有重试机制）|
 | CF 验证失败 | Chrome --no-sandbox | 你正在使用 Firefox，不会遇到此问题（见 cf-bypass.md） |
 | Firefox 启动失败 | 缺少依赖库 | `apt install -y libdbus-glib-1-2 libxt6 libxmu6` |
 
@@ -96,7 +91,4 @@ supervisorctl restart browser-xvfb browser-firefox browser-novnc
 |------|---------|
 | `install.sh` | 一键安装脚本 |
 | `start-browser.sh` | 浏览器启动器（环境变量驱动） |
-| `supervisor/browser-xvfb.conf` | Xvfb supervisor 配置 |
-| `supervisor/browser-firefox.conf` | Firefox supervisor 配置 |
-| `supervisor/browser-novnc.conf` | noVNC supervisor 配置 |
 | `cf-bypass.md` | Firefox 为何能在 Docker 中绕过 CF Turnstile 的技术分析 |
