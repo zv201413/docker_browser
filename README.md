@@ -37,7 +37,7 @@ bash -c "$(curl -sSL https://raw.githubusercontent.com/zv201413/docker_browser/m
 ## 托管服务管理
 
 ```bash
-supervisorctl status browser-xvfb browser-firefox browser-novnc browser-health
+supervisorctl status browser-launcher browser-health
 ```
 
 ## Cloudflare Tunnel 配置

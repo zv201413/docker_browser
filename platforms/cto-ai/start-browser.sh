@@ -77,7 +77,7 @@ if [ -n "$VNC_PASSWORD" ]; then
   sleep 1
   rm -f /tmp/vnc.passwd
 else
-  x11vnc -display ":${DISPLAY_NUM}" -forever -usepw -quiet &>/tmp/x11vnc.log &
+  x11vnc -display ":${DISPLAY_NUM}" -forever -nopw -quiet &>/tmp/x11vnc.log &
 fi
 
 X11VNC_PID=$!

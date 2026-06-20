@@ -94,7 +94,9 @@ log ""
 # ----- Step 1: System dependencies -----
 log "[1/5] Installing system dependencies..."
 apt-get update -qq
-apt-get install -y -qq xvfb x11vnc wget curl libdbus-glib-1-2 libxt6 libxmu6 2>/dev/null
+apt-get install -y -qq xvfb x11vnc wget curl libdbus-glib-1-2 libxt6 libxmu6 \
+    libgtk-3-0 libasound2 libx11-xcb1 libpci3 libegl1 libgl1-mesa-glx \
+    libxcomposite1 libxrandr2 libxdamage1 libxcursor1 libxinerama1 libxi6 libatk1.0-0 2>/dev/null
 
 # noVNC: prefer apt, fallback to git
 if apt-get install -y -qq novnc 2>/dev/null; then
@@ -154,9 +156,18 @@ CONFD=$(detect_supervisor_confd || true)
 
 if [ -n "$CONFD" ]; then
   log "  Supervisor conf.d: ${CONFD}"
-  curl -sSL -o "${CONFD}/browser-xvfb.conf"   "${GH_URL}/supervisor/browser-xvfb.conf"
-  curl -sSL -o "${CONFD}/browser-firefox.conf" "${GH_URL}/supervisor/browser-firefox.conf"
-  curl -sSL -o "${CONFD}/browser-novnc.conf"  "${GH_URL}/supervisor/browser-novnc.conf"
+  cat > "${CONFD}/browser-launcher.conf" <<EOF
+[program:browser-launcher]
+command=/opt/start-browser.sh
+environment=TARGET_URL="${TARGET_URL}",VNC_PORT="${VNC_PORT}",DISPLAY_NUM="${DISPLAY_NUM:-99}"
+autostart=true
+autorestart=true
+startsecs=5
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/var/log/browser.log
+stderr_logfile=/var/log/browser.err
+EOF
 
   SUP_CMD="supervisorctl"
   if [ -n "$SUPERVISOR_CFG" ]; then
@@ -173,9 +184,7 @@ else
   warn "No supervisor conf.d directory found."
   warn "Install manually:"
   warn "  mkdir -p /home/zv/boot/system.conf.d"
-  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-xvfb.conf   ${GH_URL}/supervisor/browser-xvfb.conf"
-  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-firefox.conf ${GH_URL}/supervisor/browser-firefox.conf"
-  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-novnc.conf  ${GH_URL}/supervisor/browser-novnc.conf"
+  warn "  (Create browser-launcher.conf manually)"
   warn "  supervisorctl update"
 fi
 
@@ -186,13 +195,10 @@ if [ -n "$CONFD" ]; then
   killall Xvfb x11vnc firefox 2>/dev/null || true
   rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
-  $SUP_CMD start browser-xvfb 2>/dev/null || true
-  sleep 1
-  $SUP_CMD start browser-novnc 2>/dev/null || true
-  $SUP_CMD start browser-firefox 2>/dev/null || true
+  $SUP_CMD start browser-launcher 2>/dev/null || true
 
   log "  Status:"
-  $SUP_CMD status browser-xvfb browser-firefox browser-novnc 2>/dev/null || true
+  $SUP_CMD status browser-launcher 2>/dev/null || true
 fi
 
 # ----- Done -----
@@ -212,8 +218,8 @@ echo "  3. Solve CF challenge manually (one time)"
 echo "  4. Log in — profile persists in ~/.mozilla/firefox/"
 echo ""
 echo "  Management:"
-echo "    supervisorctl status browser-xvfb browser-firefox browser-novnc"
-echo "    supervisorctl restart browser-firefox"
+echo "    supervisorctl status browser-launcher"
+echo "    supervisorctl restart browser-launcher"
 echo ""
 echo "  If this is your first time, you also need to:"
 echo "  1. Go to https://one.dash.cloudflare.com/"
