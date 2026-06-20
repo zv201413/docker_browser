@@ -2,11 +2,6 @@
 
 在任何 Docker 容器中运行真正的 Firefox 浏览器，通过 VNC 远程访问，并且能绕过 Cloudflare Turnstile 人机验证。
 
-## 为什么用 Firefox？
-
-Chrome 在 Docker 中必须加 `--no-sandbox` 参数，Cloudflare Turnstile **能检测到这个标记**，即使真人点击验证也会被拒绝。
-
-Firefox 的沙箱在容器中会自动降级，不会产生任何可被检测的信号——CF Turnstile 正常工作。详见 [cf-bypass.md](platforms/cto-ai/cf-bypass.md)。
 
 ## 一键安装 (CTO.ai / Docker)
 
@@ -57,6 +52,11 @@ docker_browser/
 │       └── README.md         # 详细部署文档
 └── ANALYSIS.md               # vevc/one-node 保活机制分析
 ```
+## 为什么用 Firefox？
+
+Chrome 在 Docker 中必须加 `--no-sandbox` 参数，Cloudflare Turnstile **能检测到这个标记**，即使真人点击验证也会被拒绝。
+
+Firefox 的沙箱在容器中会自动降级，不会产生任何可被检测的信号——CF Turnstile 正常工作。详见 [cf-bypass.md](platforms/cto-ai/cf-bypass.md)。
 
 ## 鸣谢
 
