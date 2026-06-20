@@ -22,12 +22,14 @@ cleanup() {
 }
 
 ensure_xvfb() {
-  if ! Xvfb ":${DISPLAY_NUM}" -screen 0 "${RESOLUTION}" &>/tmp/xvfb.log; then
+  Xvfb ":${DISPLAY_NUM}" -screen 0 "${RESOLUTION}" &>/tmp/xvfb.log &
+  XVFB_PID=$!
+  sleep 1
+  if ! kill -0 $XVFB_PID 2>/dev/null; then
     log "ERROR: Xvfb failed to start"
     cat /tmp/xvfb.log
     exit 1
   fi
-  XVFB_PID=$!
 
   for i in $(seq 1 10); do
     if xdpyinfo -display ":${DISPLAY_NUM}" &>/dev/null; then

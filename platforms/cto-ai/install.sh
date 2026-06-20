@@ -156,6 +156,15 @@ CONFD=$(detect_supervisor_confd || true)
 
 if [ -n "$CONFD" ]; then
   log "  Supervisor conf.d: ${CONFD}"
+  
+  # Clean up old broken configs if they exist
+  for f in browser-xvfb.conf browser-firefox.conf browser-novnc.conf; do
+    if [ -f "$CONFD/$f" ]; then
+      rm -f "$CONFD/$f"
+      log "  Removed old config: $f"
+    fi
+  done
+
   cat > "${CONFD}/browser-launcher.conf" <<EOF
 [program:browser-launcher]
 command=/opt/start-browser.sh
