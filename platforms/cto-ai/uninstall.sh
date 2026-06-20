@@ -54,7 +54,7 @@ fi
 
 # ----- Stop supervisor programs -----
 log "[1/4] Stopping browser services..."
-for prog in browser-launcher browser-health; do
+for prog in browser-launcher browser-xvfb browser-firefox browser-novnc browser-health; do
   $SUP_CMD stop "$prog" 2>/dev/null && log "  stopped $prog" || true
 done
 
@@ -62,7 +62,7 @@ done
 log "[2/4] Removing supervisor configs..."
 CONFD=$(detect_confd || true)
 if [ -n "$CONFD" ]; then
-  for f in browser-launcher.conf browser-health.conf; do
+  for f in browser-launcher.conf browser-xvfb.conf browser-firefox.conf browser-novnc.conf browser-health.conf; do
     rm -f "$CONFD/$f" && log "  removed $CONFD/$f" || true
   done
   $SUP_CMD update 2>/dev/null || true
