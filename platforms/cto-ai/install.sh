@@ -15,6 +15,8 @@ log() { echo -e "\033[1;32m[install]\033[0m $(date '+%H:%M:%S') $*"; }
 warn() { echo -e "\033[1;33m[WARN]\033[0m  $*"; }
 err()  { echo -e "\033[1;31m[ERROR]\033[0m $*"; }
 
+GH_URL="https://raw.githubusercontent.com/zv201413/docker_browser/main/platforms/cto-ai"
+
 # ----- Check root -----
 if [ "$(id -u)" -ne 0 ]; then
   err "Must run as root in the CTO.ai container (ttyd already is root)"
@@ -84,7 +86,7 @@ log ""
 # ----- Step 1: System dependencies -----
 log "[1/5] Installing system dependencies..."
 apt-get update -qq
-apt-get install -y -qq xvfb x11vnc wget curl 2>/dev/null
+apt-get install -y -qq xvfb x11vnc wget curl libdbus-glib-1-2 libxt6 libxmu6 2>/dev/null
 
 # noVNC: prefer apt, fallback to git
 if apt-get install -y -qq novnc 2>/dev/null; then
@@ -128,7 +130,7 @@ log "  Firefox ${FIREFOX_VER}"
 
 # ----- Step 3: Deploy start-browser.sh -----
 log "[3/5] Deploying start-browser.sh..."
-cp start-browser.sh /opt/start-browser.sh
+curl -sSL -o /opt/start-browser.sh "${GH_URL}/start-browser.sh"
 chmod +x /opt/start-browser.sh
 log "  Installed to /opt/start-browser.sh"
 log "  Default URL: ${TARGET_URL} (override via TARGET_URL env var)"
@@ -139,9 +141,9 @@ CONFD=$(detect_supervisor_confd || true)
 
 if [ -n "$CONFD" ]; then
   log "  Supervisor conf.d: ${CONFD}"
-  cp supervisor/browser-xvfb.conf   "${CONFD}/"
-  cp supervisor/browser-firefox.conf "${CONFD}/"
-  cp supervisor/browser-novnc.conf  "${CONFD}/"
+  curl -sSL -o "${CONFD}/browser-xvfb.conf"   "${GH_URL}/supervisor/browser-xvfb.conf"
+  curl -sSL -o "${CONFD}/browser-firefox.conf" "${GH_URL}/supervisor/browser-firefox.conf"
+  curl -sSL -o "${CONFD}/browser-novnc.conf"  "${GH_URL}/supervisor/browser-novnc.conf"
 
   SUP_CMD="supervisorctl"
   if [ -n "$SUPERVISOR_SOCK" ] && [ "$SUPERVISOR_SOCK" != "auto" ]; then
@@ -156,7 +158,9 @@ else
   warn "No supervisor conf.d directory found."
   warn "Install manually:"
   warn "  mkdir -p /home/zv/boot/system.conf.d"
-  warn "  cp supervisor/browser-*.conf /home/zv/boot/system.conf.d/"
+  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-xvfb.conf   ${GH_URL}/supervisor/browser-xvfb.conf"
+  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-firefox.conf ${GH_URL}/supervisor/browser-firefox.conf"
+  warn "  curl -sSL -o /home/zv/boot/system.conf.d/browser-novnc.conf  ${GH_URL}/supervisor/browser-novnc.conf"
   warn "  supervisorctl update"
 fi
 
